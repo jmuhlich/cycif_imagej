@@ -1,8 +1,17 @@
 // @String sample_path
-// @Integer series_length
 // @Integer num_cycles
 // @Integer num_columns
 // @Integer num_rows
+
+run("Bio-Formats Macro Extensions");
+
+// Load analyze script code.
+analyze_filename = "analyze.js";
+if (!File.exists(analyze_filename)) {
+    exit("Can't find " + analyze_filename + ". Please change to the"
+         + " directory containing the macro before running it.");
+}
+analyze_js_template = File.openAsString(analyze_filename);
 
 //create "cycles" folder containing renamed .rcpnl files
 in_dir = sample_path;
@@ -11,40 +20,48 @@ out_dir = out_parent_dir + "/" + "cycles";
 File.makeDirectory(out_dir);
 File.makeDirectory(out_parent_dir + "/" + "processing");
 list = getFileList(in_dir);
-setBatchMode(true);
 // Quick check that this looks like a raw data directory.
 ok = false;
 for (raw=0; raw<list.length; raw++) {
-	if (endsWith(list[raw], ".rcpnl")) {
-		ok = true;
-	}
+    if (endsWith(list[raw], ".rcpnl")) {
+	ok = true;
+    }
 }
 if (!ok) {
-	exit("The <sample_path> directory doesn't look like a raw data directory (no .rcpnl files).");
+    exit("The <sample_path> directory doesn't look like a raw data directory (no .rcpnl files).");
 }
 for (raw=0; raw<list.length; raw++) {
-        showProgress(raw, list.length);
-        title = list[raw];
-	 	if (startsWith(title, "1")) {
-	 		filename = "cycle1_background.rcpnl";
-	 	} else if (startsWith(title, "2")) {
-	 		filename = "cycle1.rcpnl";
-	 	} else if (startsWith(title, "3")) {
-	 		filename = "cycle2_background.rcpnl";
-	 	} else if (startsWith(title, "4")) {
-	 		filename = "cycle2.rcpnl";
-	 	} else if (startsWith(title, "5")) {
-	 		filename = "cycle3_background.rcpnl";
-	 	} else if (startsWith(title, "6")) {
-	 		filename = "cycle3.rcpnl";
-	 	} else if (startsWith(title, "7")) {
-	 		filename = "cycle4_background.rcpnl";
-	 	} else if (startsWith(title, "8")) {
-	 		filename = "cycle4.rcpnl";
-		}
-		print("saving " + out_dir + "/" + filename);
-		// FIXME TEMP comment out for testing
-		//File.copy(in_dir + "/" + title, out_dir + "/" + filename);
+    showProgress(raw, list.length);
+    title = list[raw];
+    if (!endsWith(title, ".rcpnl")) {
+        break;
+    }
+    if (startsWith(title, "1")) {
+	filename = "cycle1_background.rcpnl";
+    } else if (startsWith(title, "2")) {
+	filename = "cycle1.rcpnl";
+    } else if (startsWith(title, "3")) {
+	filename = "cycle2_background.rcpnl";
+    } else if (startsWith(title, "4")) {
+	filename = "cycle2.rcpnl";
+    } else if (startsWith(title, "5")) {
+	filename = "cycle3_background.rcpnl";
+    } else if (startsWith(title, "6")) {
+	filename = "cycle3.rcpnl";
+    } else if (startsWith(title, "7")) {
+	filename = "cycle4_background.rcpnl";
+    } else if (startsWith(title, "8")) {
+	filename = "cycle4.rcpnl";
+    }
+    src_path = in_dir + "/" + title;
+    dest_path = out_dir + "/" + filename;
+    if (File.length(dest_path) == File.length(src_path)
+        && File.lastModified(dest_path) >= File.lastModified(src_path)) {
+        print("skipping (up-to-date) " + dest_path);
+    } else {
+        print("copying to " + dest_path);
+        File.copy(src_path, dest_path);
+    }
 }
 
 //
@@ -52,89 +69,39 @@ for (raw=0; raw<list.length; raw++) {
 //
 
 
-//breakout tiles from renamed .rcpnl files
+// Break out channels from each tile.
+//
+// (Previously step 1 was to break out tiles from the rcpnl files, but this
+// was merged into step 2 for efficiency.)
 in_dir = sample_path + "/cycles";
-out_dir = sample_path + "/processing/1_tile_breakout";
+out_dir = sample_path + "/processing/2_channel_breakout";
 File.makeDirectory(out_dir);
 
 list = getFileList(in_dir);
 setBatchMode(true);
-for (cycle=0; cycle<list.length; cycle++){
-    run("Bio-Formats", "open=[" + in_dir+"/"+list[cycle] + "] color_mode=Composite open_files view=Hyperstack stack_order=XYCZT series_list=89,90,78,79");//1-" + series_length);
-    imgArray=newArray(nImages);
-    for (i=0;i<nImages;i++) {
-        selectImage(i+1);
-        title = getTitle();
- 		filename = replace(title, '[:/]', '-');
- 		filename = replace(filename, ".rcpnl", "");
- 		
- 		// FIXME temp
- 		filename = replace(filename, '#89', '1');
- 		filename = replace(filename, '#90', '2');
- 		filename = replace(filename, '#78', '3');
- 		filename = replace(filename, '#79', '4');
 
- 		filename = replace(filename, '#', '');
-	    if (startsWith(filename, "cycle1_background")) {
-	      	intermediateDir = "cycle1_background";
-	    } else if (startsWith(filename, "cycle1")){
-	      	intermediateDir = "cycle1";
-	    } else if (startsWith(filename, "cycle2_background")){
-	      intermediateDir = "cycle2_background";
-	    } else if (startsWith(filename, "cycle2")){
-	      intermediateDir = "cycle2";
-	    } else if (startsWith(filename, "cycle3_background")) {
-	      intermediateDir = "cycle3_background";
-	    } else if (startsWith(filename, "cycle3")){
-	      intermediateDir = "cycle3";
-	    } else if (startsWith(filename, "cycle4_background")){
-	      intermediateDir = "cycle4_background";
-	    } else if (startsWith(filename, "cycle4")){
-	      intermediateDir = "cycle4";
-	    }
-	    finalIntermediate = out_dir+ "/"+intermediateDir;
-	    File.makeDirectory(finalIntermediate);
-	    finalFilename = finalIntermediate+"/"+filename;
-	    print("saving " + finalFilename);
-	    saveAs("tiff", finalFilename);
+for (cycle=0; cycle<list.length; cycle++) {
+    filename = list[cycle];
+    cycle_name = replace(filename, "\.rcpnl$", "");
+    input_path = in_dir + "/" + filename;
+    Ext.setId(input_path);
+    Ext.getSeriesCount(series_length);
+    if (cycle == 0) {
+        // Sanity check.
+        if (series_length != num_columns * num_rows) {
+            exit("num_columns * num_rows must equal the total number of tiles (" + series_length + ").");
+        }
     }
-    run("Close All");
-}
-
-//
-//
-//
-
-//breakout channels from each tile
-in_dir = sample_path + "/processing/1_tile_breakout";
-out_dir = sample_path + "/processing";
-list1 = getFileList(in_dir);
-setBatchMode(true);
-for (cycle=0; cycle<list1.length; cycle++){
-	showProgress(cycle+1, list1.length);
-	run("Image Sequence...", "open=[" + in_dir + "/" + list1[cycle] + "] sort");
-	run("Stack to Images");
-	imgArray=newArray(nImages);
-    	for (i=0;i<nImages;i++) {
-        	selectImage(i+1);
-        	title = getTitle();
- 			filename = replace(title, '[:/]', '-');
- 		
- 		    // FIXME temp
- 		    filename = replace(filename, '#89', '1');
- 		    filename = replace(filename, '#90', '2');
- 		    filename = replace(filename, '#78', '3');
- 		    filename = replace(filename, '#79', '4');
-
- 			filename = replace(filename, '#', '');
- 			filename = replace(filename, ".rcpnl", "");
- 			finalIntermediate = out_dir + "/" + "2_channel_breakout";
-	    	File.makeDirectory(finalIntermediate);
-	    	finalFilename = finalIntermediate + "/" + filename;
-	    	print("saving " + finalFilename);
-	    	saveAs("tiff", finalFilename);
-    	}
-		  run("Close All");
+    Ext.getImageCount(num_channels);
+    for (s=0; s<series_length; s++) {
+        for (i=0; i<num_channels; i++) {
+            output_filename = "c-" + (i+1) + "-" + num_channels + " - " + cycle_name + " " + (s+1) + ".tif";
+            Ext.openImage("", i);
+            saveAs("tiff", out_dir + "/" + output_filename);
+            close();
+        }
+    }
+    Ext.close();
 }
 
 //
@@ -587,7 +554,7 @@ for (tile=0; tile<list1.length; tile++) {
 				//print(in_dir + "/" + list1[tile] + list2[channel]);
 				open(in_dir2 + "/" + list2[channel]);
 				setMinAndMax(1883, 6995);
-				run("WHITE");
+				run("Grays"); // FIXME was WHITE -- is this ok?
   				run("RGB Color");
 				title = getTitle();
     			print("saving " + out_dir + "/" + title);
@@ -596,7 +563,7 @@ for (tile=0; tile<list1.length; tile++) {
 				//print(in_dir + "/" + list1[tile] + list2[channel]);
 				open(in_dir2 + "/" + list2[channel]);
 				setMinAndMax(1844, 8840);
-				run("MAGENTA");
+				run("Magenta");
   				run("RGB Color");
 				title = getTitle();
     			print("saving " + out_dir + "/" + title);
@@ -605,7 +572,7 @@ for (tile=0; tile<list1.length; tile++) {
 				//print(in_dir + "/" + list1[tile] + list2[channel]);
 				open(in_dir2 + "/" + list2[channel]);
 				setMinAndMax(0, 8263);
-				run("RED");
+				run("Red");
   				run("RGB Color");
 				title = getTitle();
     			print("saving " + out_dir + "/" + title);
@@ -614,7 +581,7 @@ for (tile=0; tile<list1.length; tile++) {
 				//print(in_dir + "/" + list1[tile] + list2[channel]);
 				open(in_dir2 + "/" + list2[channel]);
 				setMinAndMax(606, 16218);
-				run("YELLOW");
+				run("Yellow");
   				run("RGB Color");
 				title = getTitle();
     			print("saving " + out_dir + "/" + title);
@@ -623,7 +590,7 @@ for (tile=0; tile<list1.length; tile++) {
 				//print(in_dir + "/" + list1[tile] + list2[channel]);
 				open(in_dir2 + "/" + list2[channel]);
 				setMinAndMax(25983, 38782);
-				run("GREEN");
+				run("Green");
   				run("RGB Color");
 				title = getTitle();
     			print("saving " + out_dir + "/" + title);
@@ -632,7 +599,7 @@ for (tile=0; tile<list1.length; tile++) {
 				//print(in_dir + "/" + list1[tile] + list2[channel]);
 				open(in_dir2 + "/" + list2[channel]);
 				setMinAndMax(2492, 18088);
-				run("CYAN");
+				run("Cyan");
   				run("RGB Color");
 				title = getTitle();
     			print("saving " + out_dir + "/" + title);
@@ -641,7 +608,7 @@ for (tile=0; tile<list1.length; tile++) {
 				//print(in_dir + "/" + list1[tile] + list2[channel]);
 				open(in_dir2 + "/" + list2[channel]);
 				setMinAndMax(0, 1458);
-				run("GRAY");
+				run("Grays"); // FIXME how is GRAY different from WHITE?
 				run("RGB Color");
 				title = getTitle();
     			print("saving " + out_dir + "/" + title);
@@ -650,7 +617,7 @@ for (tile=0; tile<list1.length; tile++) {
 				//print(in_dir + "/" + list1[tile] + list2[channel]);
 				open(in_dir2 + "/" + list2[channel]);
 				setMinAndMax(607, 3799);
-				run("BLUE");
+				run("Blue");
   				run("RGB Color");
 				title = getTitle();
     			print("saving " + out_dir + "/" + title);
@@ -728,8 +695,7 @@ for (i=0; i<bs_dirs.length; i++) {
         bs_files = Array.concat(bs_files, dir_files);
     }
 }
-		
-setBatchMode(true);
+
 for (tile=1; tile<=series_length; tile++) {
 	print("TILE ", tile);
 	print("=============");
@@ -741,51 +707,36 @@ for (tile=1; tile<=series_length; tile++) {
     // after the loop terminates is the last cycle image.
     for (cycle=1; cycle<=num_cycles; cycle++) {
         dapi_image = DAPI_dir + "/" + "c-1-4 - cycle" + cycle + " " + tile + ".tif";
-  			open(dapi_image);
-  	}
+  	open(dapi_image);
+        run("Gaussian Blur...", "sigma=2");
+  	run("Subtract Background...", "rolling=5 sliding");
+    }
     // Now, the current image is the last DAPI channel. Duplicate it and build a
     // mask for the nuclei of the remaining cells in this tile.
     run("Duplicate...", "title=mask");
-    run("Gaussian Blur...", "sigma=2");
-  	run("Subtract Background...", "rolling=5 sliding");
-  	run("Make Binary");
-  	run("Watershed");
-  	run("Analyze Particles...", "size=20-3000 pixel circularity=0.10-1.00 show=[Overlay Masks] exclude clear include");
+    run("Make Binary");
+    run("Watershed");
+    run("Analyze Particles...", "size=20-3000 pixel circularity=0.10-1.00 show=Overlay exclude clear include");
     for (j=0; j<Overlay.size; j++) {
         Overlay.activateSelection(0);
         run("Enlarge...", "enlarge=3 pixel");
         Overlay.addSelection();
         Overlay.removeSelection(0);
     }
-    Overlay.copy;
-  	close();
 
     for (i=0; i<bs_files.length; i++) {
         filename = bs_files[i];
         if (endsWith(filename, " " + tile + ".tif")) {
             open(filename);
+            run("Gaussian Blur...", "sigma=2");
+  	    run("Subtract Background...", "rolling=5 sliding");
         }
     }
 
-    run("Table...", "name=[cycif results]");
-    for (i=1; i<=nImages; i++) {
-    	print("analyzing image: ", i);
-        selectImage(i);
-        title = getTitle();
-        run("Gaussian Blur...", "sigma=2");
-        run("Subtract Background...", "rolling=5 sliding");
-        Overlay.paste;
-        Overlay.measure;
-        if (i==1) {
-            print("[cycif results]", "\\Headings:" + String.getResultsHeadings);
-        }
-        String.copyResults;
-        print("[cycif results]", String.paste);
-  	}
+    out_path = out_dir + "/" + "segmentation_results" + tile + ".tsv";
+    analyze_js = replace(analyze_js_template, "\\$OUTPUT_PATH", out_path);
+    eval("script", analyze_js);
     run("Close All");
-  	selectWindow("cycif results");
-  	saveAs("results", out_dir + "/" + "segmentation_results" + tile + ".tsv");
-  	run("Close");  	
 }
 
 //
