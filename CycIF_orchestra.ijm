@@ -14,6 +14,9 @@ if (!File.exists(analyze_filename)) {
 analyze_js_template = File.openAsString(analyze_filename);
 
 //create "cycles" folder containing renamed .rcpnl files
+print("=======");
+print("STAGE 0");
+print("=======");
 in_dir = sample_path;
 out_parent_dir = sample_path;
 out_dir = out_parent_dir + "/" + "cycles";
@@ -68,8 +71,10 @@ for (raw=0; raw<list.length; raw++) {
 //
 //
 
-
 // Break out channels from each tile.
+print("=======");
+print("STAGE 2");
+print("=======");
 //
 // (Previously step 1 was to break out tiles from the rcpnl files, but this
 // was merged into step 2 for efficiency.)
@@ -109,6 +114,9 @@ for (cycle=0; cycle<list.length; cycle++) {
 //
 
 //register channels of each tile
+print("=======");
+print("STAGE 3");
+print("=======");
 in_dir = sample_path + "/processing/2_channel_breakout";
 out_dir = sample_path + "/processing/3_post_registration_images";
 File.makeDirectory(out_dir);
@@ -122,7 +130,9 @@ for (tile=1; tile<=series_length; tile++){
 	for (image=0; image<list.length; image++){
 		showProgress(tile+1, list.length);
 		if (endsWith(list[image], " " + tile + ".tif")){
-		    open(in_dir + "/" + list[image]);
+		    path = in_dir + "/" + list[image];
+		    print("opening " + path);
+		    open(path);
 		}
   }
 
@@ -131,6 +141,7 @@ run("Images to Stack", "name=FITC title=c-2-4 use");
 run("Images to Stack", "name=Cy3 title=c-3-4 use");
 run("Images to Stack", "name=Cy5 title=c-4-4 use");
 
+print("registering");
 selectWindow("DAPI");
 run("MultiStackReg", "stack_1=DAPI action_1=Align file_1=[" + sample_path + "/transformation_file2.txt] stack_2=None action_2=Ignore file_2=[] transformation=[Rigid Body] save");
 selectWindow("FITC");
@@ -177,6 +188,9 @@ run("Close All");
 //
 
 //background subtraction
+print("=======");
+print("STAGE 4");
+print("=======");
 in_dir = sample_path + "/processing/3_post_registration_images";
 out_dir = sample_path + "/processing/4_background_subtractions";
 File.makeDirectory(out_dir);
@@ -310,6 +324,9 @@ for (BS=0; BS<list.length; BS++) {
 //
 
 //generate target montages
+print("=======");
+print("STAGE 5");
+print("=======");
 in_dir = sample_path + "/processing/4_background_subtractions";
 out_dir = sample_path + "/processing/5_target_montages";
 File.makeDirectory(out_dir);
@@ -347,6 +364,9 @@ for (folder=0; folder<list.length; folder++) {
 // Commented out because this all depends on manual adjustment.
 
 //adjust brightness and contrast (MUST DO BY HAND!!!)
+print("=======");
+print("STAGE 6");
+print("=======");
 in_dir = sample_path + "/processing/5_target_montages";
 out_dir = sample_path + "/processing/6_brightness_and_contrast_corrections";
 File.makeDirectory(out_dir);
@@ -378,6 +398,9 @@ imgArray=newArray(nImages);
 //
 
 //make RGB
+print("=======");
+print("STAGE 7");
+print("=======");
 in_dir = sample_path + "/processing/6_brightness_and_contrast_corrections";
 out_dir = sample_path + "/processing/7_RGB_color_images"
 File.makeDirectory(out_dir);
@@ -475,6 +498,9 @@ run("Close All");
 
 
 //get each registered and merged tile for segmentation
+print("========");
+print("STAGE 10");
+print("========");
 in_dir = sample_path + "/processing/4_background_subtractions";
 out_parent_dir = sample_path + "/processing/10_tiles_for_segmentation";
 File.makeDirectory (out_parent_dir);
@@ -679,6 +705,9 @@ for (tile=0; tile<list1.length; tile++) {
 
 
 //generate single-cell data from each tile
+print("========");
+print("STAGE 11");
+print("========");
 File.makeDirectory (sample_path + "/processing/11_segmentation_results");
 DAPI_dir = sample_path + "/processing/3_post_registration_images/DAPI";
 bs_base_dir = sample_path + "/processing/4_background_subtractions/";
@@ -697,8 +726,7 @@ for (i=0; i<bs_dirs.length; i++) {
 }
 
 for (tile=1; tile<=series_length; tile++) {
-	print("TILE ", tile);
-	print("=============");
+	print("-> tile ", tile);
     showProgress(tile-1, series_length);
 		out_dir = sample_path + "/processing/11_segmentation_results" + "/" + tile;
     File.makeDirectory(out_dir);
