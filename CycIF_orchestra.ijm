@@ -220,6 +220,7 @@ for (channel=0; channel<list1.length; channel++) {
 			    				    imageCalculator("Subtract create", signal,background);
 			    				}
 			    				saveAs("Tiff", out_dir + "/" + "Result of " + signal);
+                                                    run("Close All");
 			    			}
 		    			}
 	    			}
@@ -318,6 +319,7 @@ for (BS=0; BS<list.length; BS++) {
     print("saving " + finalFilename);
     saveAs("tiff", finalFilename);
 	}
+    run("Close All");
 }
 
 //
@@ -556,6 +558,7 @@ for (tile=0; tile<series_length; tile++) {
     			saveAs("Tiff", out_dir + "/" + title);
 		}
 	}
+    run("Close All");
 }
 
 //
@@ -678,6 +681,7 @@ for (tile=0; tile<list1.length; tile++) {
     			saveAs("Tiff", out_dir + "/" + title);
     		}
     	}
+    run("Close All");
 }
 
 //
