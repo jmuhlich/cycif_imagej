@@ -99,6 +99,7 @@ for (cycle=0; cycle<list.length; cycle++) {
     }
     Ext.getImageCount(num_channels);
     for (s=0; s<series_length; s++) {
+        Ext.setSeries(s);
         for (i=0; i<num_channels; i++) {
             output_filename = "c-" + (i+1) + "-" + num_channels + " - " + cycle_name + " " + (s+1) + ".tif";
             Ext.openImage("", i);
