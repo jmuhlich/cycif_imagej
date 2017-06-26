@@ -38,7 +38,7 @@ for (raw=0; raw<list.length; raw++) {
     showProgress(raw, list.length);
     title = list[raw];
     if (!endsWith(title, ".rcpnl")) {
-        break;
+        continue;
     }
     if (startsWith(title, "1")) {
 	filename = "cycle1_background.rcpnl";
