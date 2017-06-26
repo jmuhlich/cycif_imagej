@@ -23,6 +23,7 @@ out_dir = out_parent_dir + "/" + "cycles";
 File.makeDirectory(out_dir);
 File.makeDirectory(out_parent_dir + "/" + "processing");
 list = getFileList(in_dir);
+Array.sort(list);
 // Quick check that this looks like a raw data directory.
 ok = false;
 for (raw=0; raw<list.length; raw++) {
@@ -83,6 +84,7 @@ out_dir = sample_path + "/processing/2_channel_breakout";
 File.makeDirectory(out_dir);
 
 list = getFileList(in_dir);
+Array.sort(list);
 setBatchMode(true);
 
 for (cycle=0; cycle<list.length; cycle++) {
@@ -126,6 +128,7 @@ File.makeDirectory(out_dir + "/" + "FITC");
 File.makeDirectory(out_dir + "/" + "Cy3");
 File.makeDirectory(out_dir + "/" + "Cy5");
 list = getFileList(in_dir);
+Array.sort(list);
 setBatchMode(true);
 for (tile=1; tile<=series_length; tile++){
 	for (image=0; image<list.length; image++){
@@ -196,10 +199,12 @@ in_dir = sample_path + "/processing/3_post_registration_images";
 out_dir = sample_path + "/processing/4_background_subtractions";
 File.makeDirectory(out_dir);
 list1 = getFileList(in_dir);
+Array.sort(list1);
 setBatchMode(true);
 for (channel=0; channel<list1.length; channel++) {
 	//print(list1[channel]);
 	list2 = getFileList(in_dir + "/" + list1[channel]);
+    Array.sort(list2);
 	//print(list2[0]);
 	for (tile=1; tile<=series_length; tile++) {
 		for (cycle=1; cycle<=num_cycles; cycle++) {
@@ -232,6 +237,7 @@ for (channel=0; channel<list1.length; channel++) {
 
 in_dir = sample_path + "/processing/4_background_subtractions";
 list = getFileList(in_dir);
+Array.sort(list);
 setBatchMode(true);
 for (BS=0; BS<list.length; BS++) {
 	filename = list[BS];
@@ -334,6 +340,7 @@ in_dir = sample_path + "/processing/4_background_subtractions";
 out_dir = sample_path + "/processing/5_target_montages";
 File.makeDirectory(out_dir);
 list = getFileList(in_dir);
+Array.sort(list);
 setBatchMode(true);
 for (folder=0; folder<list.length; folder++) {
 	if (startsWith(list[folder], "BS")) {
@@ -374,6 +381,7 @@ in_dir = sample_path + "/processing/5_target_montages";
 out_dir = sample_path + "/processing/6_brightness_and_contrast_corrections";
 File.makeDirectory(out_dir);
 list = getFileList(in_dir);
+Array.sort(list);
 setBatchMode(false);
 for (montage=0; montage<list.length; montage++) {
 	open(in_dir + "/" + list[montage]);
@@ -408,6 +416,7 @@ in_dir = sample_path + "/processing/6_brightness_and_contrast_corrections";
 out_dir = sample_path + "/processing/7_RGB_color_images"
 File.makeDirectory(out_dir);
 list = getFileList(in_dir);
+Array.sort(list);
 setBatchMode(true);
 for (montage=0; montage<list.length; montage++) {
 	open(in_dir + "/" + list[montage]);
@@ -508,6 +517,7 @@ in_dir = sample_path + "/processing/4_background_subtractions";
 out_parent_dir = sample_path + "/processing/10_tiles_for_segmentation";
 File.makeDirectory (out_parent_dir);
 list1 = getFileList(in_dir);
+Array.sort(list1);
 setBatchMode(true);
 for (tile=0; tile<series_length; tile++) {
 	showProgress(tile, series_length);
@@ -517,6 +527,7 @@ for (tile=0; tile<series_length; tile++) {
 	for (channel=0; channel<list1.length; channel++) {
 		if (startsWith(list1[channel], "BS")) {
 			list2 = getFileList(in_dir + "/" + list1[channel]);
+                    Array.sort(list2);
 			open(in_dir + "/" + list1[channel] + "/" + list2[tile]);
 			imgArray=newArray(nImages);
     			for (i=0;i<nImages;i++) {
@@ -568,11 +579,13 @@ for (tile=0; tile<series_length; tile++) {
 //adjust B&C per channel to match respective montages
 in_dir1 = sample_path + "/processing/10_tiles_for_segmentation";
 list1 = getFileList(in_dir1);
+Array.sort(list1);
 setBatchMode(true);
 for (tile=0; tile<list1.length; tile++) {
 		in_dir2 = sample_path + "/processing/10_tiles_for_segmentation" + "/" + list1[tile] + "/" + "BS";
       //showProgress(tile+1, list1.length);
 		list2 = getFileList(in_dir2);
+    list2 = Array.sort(list2);
 		File.makeDirectory(in_dir1 + "/" + list1[tile] + "/" + "B&C");
 		out_dir = in_dir1 + "/" + list1[tile] + "B&C";
 
@@ -691,11 +704,13 @@ for (tile=0; tile<list1.length; tile++) {
 //generate individual final images
 in_dir1 = sample_path + "/processing/10_tiles_for_segmentation";
 list1 = getFileList(in_dir1);
+Array.sort(list1);
 setBatchMode(true);
 for (tile=0; tile<list1.length; tile++) {
 		in_dir2 = sample_path + "/processing/10_tiles_for_segmentation" + "/" + list1[tile] + "/" + "B&C";
       	showProgress(tile+1, list1.length);
 		list2 = getFileList(in_dir2);
+    Array.sort(list2);
 		File.makeDirectory(in_dir1 + "/" + list1[tile] + "/" + "final");
 		out_dir = in_dir1 + "/" + list1[tile] + "final";
 		run("Image Sequence...", "open=[" + in_dir2 + "] sort");
@@ -717,12 +732,14 @@ File.makeDirectory (sample_path + "/processing/11_segmentation_results");
 DAPI_dir = sample_path + "/processing/3_post_registration_images/DAPI";
 bs_base_dir = sample_path + "/processing/4_background_subtractions/";
 bs_dirs = getFileList(bs_base_dir);
+Array.sort(bs_dirs);
 bs_files = newArray();
 for (i=0; i<bs_dirs.length; i++) {
     dir = bs_dirs[i];
     if (!endsWith(dir, "DAPI/") && endsWith(dir, "/")) {
     	sub_dir = bs_base_dir + dir;
         dir_files = getFileList(sub_dir);
+        Array.sort(dir_files);
         for (j=0; j<dir_files.length; j++) {
         	dir_files[j] = sub_dir + dir_files[j];
         }
@@ -782,7 +799,8 @@ out_parent_dir = sample_path + "/processing/11_segmentation_results";
 File.makeDirectory (out_parent_dir);
 DAPI_dir = sample_path + "/processing/3_post_registration_images/DAPI";
 in_dir1 = sample_path + "/processing/10_tiles_for_segmentation" + "/" + "1" + "/" + "B&C";
-list = getFileList(in_dir1)
+list = getFileList(in_dir1);
+Array.sort(list);
 setBatchMode(true);
 for (tile=1; tile<=series_length; tile++) {
       showProgress(tile, series_length);
