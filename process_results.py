@@ -40,8 +40,8 @@ data.rename(columns={' ': 'object'}, inplace=True)
 
 data['tile_x'] = (data.tile - 1) % 11
 data['tile_y'] = (data.tile - 1) // 11
-data['gx'] = data.X + data.tile_x * (1280*.325)
-data['gy'] = data.Y + data.tile_y * (1080*.325)
+data['gx'] = data.tile_x * (1280*.325) + data.X
+data['gy'] = (data.tile_y + 1) * (1080*.325) - data.Y
 
 ab_channels = [
     'c-2-4 - cycle1', 'c-3-4 - cycle1', 'c-4-4 - cycle1',
