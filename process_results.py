@@ -4,7 +4,7 @@ import re
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import seaborn as sns
+#import seaborn as sns
 import pathlib2 as pathlib
 
 
@@ -15,7 +15,7 @@ for sample_path in base.iterdir():
     if not re.match(r'\d+_\w+_\d+', sample_name):
         continue
     # Only load a subset of the data for now.
-    if not re.match(r'2\d_\w+_\d', sample_name):
+    if not sample_name in ('26_NAIVE_2', '23_TUMOR_3'):
         continue
     print sample_name
     results_path = sample_path.joinpath('processing', '11_segmentation_results')
@@ -85,3 +85,14 @@ for readout, ax in zip(readouts, axes):
         ax.set_ylim(ymin=1)
 axes[-1].legend()
 plt.tight_layout(1.0)
+
+x = data[(data.sample_name=='23_TUMOR_3')&(data.readout=='CD68')]
+plt.subplot(121)
+plt.imshow(np.flipud(skimage.transform.rescale(im, 0.1)), cmap='gray')
+plt.xlim(0, 1400)
+plt.ylim(0, 1700)
+plt.subplot(122)
+plt.scatter(x.gx/10/.325, x.gy/10/.325, s=x.Area/10, alpha=0.1)
+plt.xlim(0, 1400)
+plt.ylim(0, 1700)
+plt.gca().set_aspect('equal')
